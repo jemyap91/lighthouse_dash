@@ -4,6 +4,7 @@ from collections import defaultdict, Counter
 from collections import OrderedDict
 import warnings
 import yaml
+warnings.simplefilter("ignore", UserWarning)
 
 BASE_DIR = Path(__file__).parent
 
