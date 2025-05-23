@@ -1,3 +1,3 @@
-column_reference_file_name: "master_sheet_reference.xlsx" # change this to name of the column reference file
+column_reference_file_name: "master_sheet_reference_v2.xlsx" # change this to name of the column reference file
 assessment_guide_folder_name: "assessment_guide" # change this to name of assessment guide folder
 compiled_master_sheet: "master_sheet.xlsx" # change this to the name of the compiled master sheet file you desire
