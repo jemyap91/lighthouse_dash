@@ -72,7 +72,11 @@ def main(cfg):
         pieces = []
         for table_name, cols in table_cols.items():
             df = pd.read_excel(data_path, sheet_name=table_name, header=4)  # pull in AG data. Each table name from column reference sheet is a sheet name in the AG file.
-            df.columns = df.columns.str.strip()
+            df.columns = (
+                df.columns
+                .str.replace(r'\s*\n\s*', ' ', regex=True)  
+                .str.strip()                                
+            )
 
             present = [c for c in cols if c in df.columns] # cols = columns from reference, present = columns in AG
             missing = set(cols) - set(present)
