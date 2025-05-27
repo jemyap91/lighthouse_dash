@@ -59,7 +59,13 @@ def main(cfg):
 
     for table_name, cols in table_cols.items():
         table_cols[table_name] = list(OrderedDict.fromkeys(cols))
-   
+    
+    # # Collect duplicated column names across tables
+    # all_cols = []
+    # for cols in table_cols.values():
+    #     all_cols.extend(cols)
+    # dupe_cols = {c for c, cnt in Counter(all_cols).items() if cnt > 1}
+
     file_frames = []   # to collect df for each file
 
     for data_path in ag_files:
@@ -86,6 +92,14 @@ def main(cfg):
             df_sub = df[present].copy()
             for c in missing:
                 df_sub[c] = pd.NA
+
+            # rename_map = {
+            # col: f"{col}_{table_name}"
+            # for col in df_sub.columns
+            # if col in dupe_cols
+            # }
+            # if rename_map:
+            #     df_sub = df_sub.rename(columns=rename_map)
 
             pieces.append(df_sub)
 
