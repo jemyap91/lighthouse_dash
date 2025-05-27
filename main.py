@@ -1,6 +1,10 @@
 import pandas as pd
 from pathlib import Path
+from collections import defaultdict, Counter
+from collections import OrderedDict
+import warnings
 import yaml
+warnings.simplefilter("ignore", UserWarning)
 
 BASE_DIR = Path(__file__).parent
 
@@ -15,7 +19,12 @@ def main(cfg):
 
 
     ref_path  = repo_root / cfg["column_reference_file_name"]
-    data_path = repo_root / cfg["assessment_guide_file_name"]
+    ag_folder = repo_root / cfg["assessment_guide_folder_name"]
+    ag_files  = sorted(ag_folder.glob("*.xls*"))
+
+    print("Found workbooks:")
+    for p in ag_files:
+        print("•", p.name)
 
     ref_sheets  = pd.read_excel(ref_path,  sheet_name=None)
 
@@ -32,29 +41,77 @@ def main(cfg):
         else:
             print(f"Skipping sheet {sheet_name!r}: missing \"Table\" and \"Columm\" columns")
 
-    pieces = []
+    
+    table_cols = defaultdict(list)
 
     for tab_dict in ref_tabs:
-        sheet_key = next(iter(tab_dict.keys()))
         sheet_map = next(iter(tab_dict.values()))
-        
-        for table_name, cols in sheet_map.items(): 
-            df = pd.read_excel(data_path, sheet_name=table_name, header=4) 
-            df.columns = df.columns.str.strip()
-            present = [c for c in cols if c in df.columns]
+        for table_name, cols in sheet_map.items():
+            table_cols[table_name].extend(cols)
+            
+    for table_name, all_cols in table_cols.items():
+        counts = Counter(all_cols)
+        dupes = [col for col, n in counts.items() if n > 1]
+        if dupes:
+            print(f"⚠️ Table “{table_name}” has duplicate columns: {dupes}")
+        else:
+            print(f"✅ Table “{table_name}” has no repeated columns.")
+
+    for table_name, cols in table_cols.items():
+        table_cols[table_name] = list(OrderedDict.fromkeys(cols))
+    
+    # # Collect duplicated column names across tables
+    # all_cols = []
+    # for cols in table_cols.values():
+    #     all_cols.extend(cols)
+    # dupe_cols = {c for c, cnt in Counter(all_cols).items() if cnt > 1}
+
+    file_frames = []   # to collect df for each file
+
+    for data_path in ag_files:
+        # derive suffix
+        parts = data_path.stem.split("assessment_guide_")
+        suffix = parts[1]
+
+        print(f"Reading {data_path.name!r} (suffix = {suffix})")
+
+        pieces = []
+        for table_name, cols in table_cols.items():
+            df = pd.read_excel(data_path, sheet_name=table_name, header=4)  # pull in AG data. Each table name from column reference sheet is a sheet name in the AG file.
+            df.columns = (
+                df.columns
+                .str.replace(r'\s*\n\s*', ' ', regex=True)  
+                .str.strip()                                
+            )
+
+            present = [c for c in cols if c in df.columns] # cols = columns from reference, present = columns in AG
             missing = set(cols) - set(present)
             if missing:
-                print(f"⚠️ Tab {sheet_key}, in table {table_name!r}, these columns were missing: {missing}")
-            
+                print(f"⚠️ In table {table_name!r}, missing columns: {missing}")
+
             df_sub = df[present].copy()
             for c in missing:
                 df_sub[c] = pd.NA
-        
+
+            # rename_map = {
+            # col: f"{col}_{table_name}"
+            # for col in df_sub.columns
+            # if col in dupe_cols
+            # }
+            # if rename_map:
+            #     df_sub = df_sub.rename(columns=rename_map)
+
             pieces.append(df_sub)
 
-    master_df = pd.concat(pieces, axis=1).reset_index(drop=True)
+        file_df = pd.concat(pieces, axis=1) # master df for each file
 
-    master_df.head(10)
+        file_df.insert(0, "DevCo", [suffix] * len(file_df)) # append DevCo column
+
+        file_frames.append(file_df) # append master df for each file to a list
+
+    master_df = pd.concat(file_frames, axis=0, ignore_index=True) # stack master df for each file row-wise
+
+    print("Final master shape:", master_df.shape)
 
     output_path = repo_root/ cfg["compiled_master_sheet"]
     master_df.to_excel(output_path, index=False)
