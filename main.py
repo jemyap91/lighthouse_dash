@@ -59,14 +59,8 @@ def main(cfg):
 
     for table_name, cols in table_cols.items():
         table_cols[table_name] = list(OrderedDict.fromkeys(cols))
-    
-    # # Collect duplicated column names across tables
-    # all_cols = []
-    # for cols in table_cols.values():
-    #     all_cols.extend(cols)
-    # dupe_cols = {c for c, cnt in Counter(all_cols).items() if cnt > 1}
 
-    file_frames = []   # to collect df for each file
+    file_frames = []   # collect df for each file
 
     for data_path in ag_files:
         # derive suffix
@@ -96,14 +90,6 @@ def main(cfg):
                 for c in missing:
                     df_sub[c] = pd.NA
 
-                # rename_map = {
-                # col: f"{col}_{table_name}"
-                # for col in df_sub.columns
-                # if col in dupe_cols
-                # }
-                # if rename_map:
-                #     df_sub = df_sub.rename(columns=rename_map)
-
                 pieces.append(df_sub)
 
         file_df = pd.concat(pieces, axis=1) # master df for each file
@@ -112,7 +98,7 @@ def main(cfg):
 
         file_frames.append(file_df) # append master df for each file to a list
 
-    master_df = pd.concat(file_frames, axis=0, ignore_index=True) # stack master df for each file row-wise
+    master_df = pd.concat(file_frames, axis=0, ignore_index=True) # stack master df for each set of DevCo data row-wise
 
     print("Final master shape:", master_df.shape)
 

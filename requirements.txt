@@ -1,0 +1,3 @@
+pandas
+pyyaml
+openpyxl # for writing excel files
