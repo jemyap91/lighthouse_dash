@@ -1,0 +1,4 @@
+# requirements.txt
+pandas
+pyyaml
+openpyxl # for writing excel files
