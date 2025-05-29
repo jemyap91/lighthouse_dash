@@ -19,16 +19,15 @@ A python script that consolidates multiple *Assessment Guide* workbooks into a s
 repo_root/
 ├─ main.py   ← the script used to compile the assessment guide workbooks
 ├─ config.yaml                    ← run‑time settings (see below)
+├─ requirements.txt               ← Python dependencies file
 ├─ README.md                      ← this file
-├─ master_sheet_reference.xlsx          ← authoritative list of tables & columns
+├─ master_sheet_reference.xlsx    ← authoritative list of tables & columns
 ├─ assessment_guides/             ← **folder** containing Assessment Guide excel workbooks, e.g.
 │  ├─ assessment_guide_qiddiya.xlsx
 │  ├─ assessment_guide_diriyah.xlsm
 │  └─ ...
-└─ master_sheet.xlsx/                      ← **output** fle
+└─ master_sheet.xlsx/             ← **output** fle
 ```
-
-Feel free to rename paths – just mirror the changes in `config.yaml`.
 
 ---
 
