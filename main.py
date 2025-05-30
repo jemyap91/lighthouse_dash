@@ -61,6 +61,10 @@ def main(cfg):
         table_cols[table_name] = list(OrderedDict.fromkeys(cols))
 
     file_frames = []   # collect df for each file
+    org_chart_list = []  # collect org chart data
+
+    # Define organization chart columns
+    ORG_COLS = {"EmployeeID", "ManagerID", "Label", "Group", "Sub-Label"}
 
     for data_path in ag_files:
         # derive suffix
@@ -90,6 +94,13 @@ def main(cfg):
                 for c in missing:
                     df_sub[c] = pd.NA
 
+                # Build a new sheet with the org-chart columns ---
+                if ORG_COLS.issubset(df_sub.columns):
+                    org_df = df_sub.loc[:, sorted(ORG_COLS)].copy()
+                    # keep track of which DevCo this came from
+                    org_df.insert(0, "DevCo", suffix)
+                    org_chart_list.append(org_df)
+
                 pieces.append(df_sub)
 
         file_df = pd.concat(pieces, axis=1) # master df for each file
@@ -97,8 +108,14 @@ def main(cfg):
         file_df.insert(0, "DevCo", [suffix] * len(file_df)) # append DevCo column
 
         file_frames.append(file_df) # append master df for each file to a list
-
+    
     master_df = pd.concat(file_frames, axis=0, ignore_index=True) # stack master df for each set of DevCo data row-wise
+
+    # For org-chart chunks, concatenate them
+    if org_chart_list:
+        org_chart_df = pd.concat(org_chart_list, ignore_index=True)
+        org_chart_df = org_chart_df.dropna(subset=["EmployeeID"]).reset_index(drop=True)
+
 
     print("Final master shape:", master_df.shape)
 
@@ -107,6 +124,7 @@ def main(cfg):
     with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
         master_df.to_excel(writer, sheet_name='Sheet1', index=False)
         glossary_df.to_excel(writer, sheet_name='Glossary', index=False)
+        org_chart_df.to_excel(writer, sheet_name="OrgChart", index=False)
         print(f"✅ Saved master sheet to {output_path!r}")
 
 if __name__ == "__main__":
