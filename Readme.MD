@@ -6,9 +6,10 @@ A python script that consolidates multiple *Assessment Guide* workbooks into a s
 
 ## ✨ Features
 
-* Ingests every workbook in an `assessment_guide` folder.
+* Ingests every assessment guide excel document in an `assessment_guide` folder.
 * **Column sanity‑checks** against a *Column Reference* file, with warnings for duplicates or missing fields.
 * **Glossary tab** kept on a separate tab. Definitions used to explain terminology on dashboard.
+* **Org Chart tab** kept on another separate tab for org chart visual.
 * **Config file** – point the script to filenames or folders necessary for consolidation by editing the config.yaml file.
 
 ---
@@ -38,19 +39,19 @@ repo_root/
 ```yaml
 # config.yaml
 column_reference_file_name: "master_sheet_reference.xlsx"
-assessment_guide_folder_name: "assessment_guide"   # folder
+assessment_guide_folder_name: "assessment_guide"   # Note that this folder is required for the ingestion of the assessment guide files
 compiled_master_sheet: "master_sheet.xlsx"
 ```
 
 * **`column_reference_file_name`** – excel file where each sheet refers to a dash in the report and contains the *Table* and *Column* lists for data extraction from the assessment guide files.
-* **`assessment_guide_folder_name`** – directory containing one workbook per DevCo (must start with `assessment_guide_`).
+* **`assessment_guide_folder_name`** – directory containing one AG excel file per DevCo (Each excel file must start with `assessment_guide_`).
 * **`compiled_master_sheet`** – output file name.
 ---
 
 ## 🤖 How It Works (High‑level Flow)
 
 ```text
-load_config() → read YAML
+Ingest assessment guide files from assessment_guide folder and master_sheet_reference file
    ↓
 scan master_sheet_reference.xlsx
    ↓
@@ -60,7 +61,7 @@ for each Assessment Guide workbook
    ↓
 concat columns for each DevCo horizontally (column-wise) and data for each DevCo vertically (row-wise)
    ↓
-write master sheet + Glossary tab
+write master sheet + Glossary tab + Org Chart tab
 ```
 
 ---
