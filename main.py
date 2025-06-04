@@ -106,13 +106,15 @@ def main(cfg):
                     org_chart_list.append(org_df)
 
                 # Build a new sheet with the schedule matrix columns
-                elif SCHEDULE_MATRIX_COLS.issubset(df_sub.columns):
+                if SCHEDULE_MATRIX_COLS.issubset(df_sub.columns):
                     # Ensure the columns are in the correct order
                     schedule_df = df_sub.loc[:, sorted(SCHEDULE_MATRIX_COLS)].copy()
                     schedule_df.dropna()
                     # keep track of which DevCo this came from
                     schedule_df.insert(0, "DevCo", suffix)
                     schedule_list.append(schedule_df)
+                    remaining_df = df_sub.loc[:, ~df_sub.columns.isin(SCHEDULE_MATRIX_COLS)].copy()
+                    pieces.append(remaining_df)
 
                 else:
                     DROP_COLS = ORG_COLS | SCHEDULE_MATRIX_COLS
