@@ -63,6 +63,7 @@ def main(cfg):
     file_frames = []   # collect df for each file
     org_chart_list = []  # collect org chart data
     schedule_list = []  # collect schedule matrix data
+    summary_list = [] # collect assessment summary data
 
     # Define organization chart columns
     ORG_COLS = {"EmployeeID", "ManagerID", "Label", "Group", "Sub-Label"}
@@ -81,6 +82,19 @@ def main(cfg):
         for table_name, cols in table_cols.items():
             if table_name == 'Glossary&Definitions':
                 glossary_df = pd.read_excel(data_path, sheet_name=table_name, header=4)
+
+            elif table_name == 'AssessmentSummary': 
+                entire_summary_df = pd.read_excel(data_path, sheet_name="AssessmentSummary", header=None)
+                b3_val = entire_summary_df.iat[2, 1]
+
+                summary_df = pd.read_excel(data_path, sheet_name=table_name, header=4)
+                summary_df_cols = [c for c in cols if c in summary_df.columns]
+                summary_df_sub = summary_df[summary_df_cols]
+                summary_df_sub.insert(0, "DevCo", suffix)
+                summary_df_sub["ReportingPeriod"] = b3_val  # Add ReportingPeriod column
+                summary_df_sub = summary_df_sub.dropna()
+                summary_list.append(summary_df_sub)
+
             else:
                 df = pd.read_excel(data_path, sheet_name=table_name, header=4)  # pull in AG data. Each table name from column reference sheet is a sheet name in the AG file.
                 df.columns = (
@@ -128,6 +142,7 @@ def main(cfg):
         file_frames.append(file_df) # append master df for each file to a list
     
     master_df = pd.concat(file_frames, axis=0, ignore_index=True) # stack master df for each set of DevCo data row-wise
+    summary_df_stacked = pd.concat(summary_list, axis=0, ignore_index=True) # stack assess summary df for each set of DevCo data row-wise
 
     # For org-chart chunks, concatenate them
     if org_chart_list:
@@ -148,6 +163,7 @@ def main(cfg):
         glossary_df.to_excel(writer, sheet_name='Glossary', index=False)
         org_chart_df.to_excel(writer, sheet_name="OrgChart", index=False)
         schedule_final_df.to_excel(writer, sheet_name="ScheduleMatrix", index=False)
+        summary_df_stacked.to_excel(writer, sheet_name="AssessmentSummary", index=False)
         print(f"✅ Saved master sheet to {output_path!r}")
 
 if __name__ == "__main__":
