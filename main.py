@@ -13,6 +13,7 @@ def load_config(path="config.yaml"):
     with open(cfg_path, "r") as f:
         return yaml.safe_load(f)
 
+
 def main(cfg):
     repo_root = BASE_DIR
     print(repo_root)
@@ -72,6 +73,7 @@ def main(cfg):
     SCHEDULE_MATRIX_COLS = {"ProjectID", "ForecastCompletionYear", "ProjectType", "ProjectStage", "Criticality", "DelayInSchedule", "CostOverrun", "Priority", "ProjectValue"}
 
     for data_path in ag_files:
+        print(f"Sheets in {data_path.name}: {pd.ExcelFile(data_path).sheet_names}")
         # derive suffix
         parts = data_path.stem.split("assessment_guide_")
         suffix = parts[1]
@@ -136,6 +138,9 @@ def main(cfg):
                     pieces.append(cleaned_df)
 
         file_df = pd.concat(pieces, axis=1) # master df for each file
+        
+
+
 
         file_df.insert(0, "DevCo", [suffix] * len(file_df)) # append DevCo column
 
